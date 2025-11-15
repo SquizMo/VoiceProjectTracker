@@ -6,12 +6,73 @@
 // =====================
 // Configuration (GLOBAL)
 // =====================
-var VOICE_FOLDER_ID = '1lq_rbzqRj_keQ3XXwtWUYG7z6hNGTxK7'; // main voice projects folder
-var AUDITION_FOLDER_ID = '1YtKGcqfCC3zR5XriayoMw-SpvmA2Exmk'; // auditions folder
 
 // Header fingerprints (to locate sheets reliably)
 var VOICE_HEADERS = ["Folder", "File Name", "Character", "Date Added", "Mime Type", "File Link", "Final Link", "Status"];
 var AUDITION_HEADERS = ["Folder", "File Name", "Character", "Date Added", "Mime Type", "File Link", "Status"];
+
+// =====================
+// Settings storage
+// =====================
+var SETTINGS_KEY = 'VOICE_TRACKER_SETTINGS';
+
+/**
+ * Returns current settings object:
+ * {
+ *   voiceFolderId: string,
+ *   auditionFolderId: string
+ * }
+ */
+function getTrackerSettings() {
+  var props = PropertiesService.getDocumentProperties();
+  var raw = props.getProperty(SETTINGS_KEY);
+  if (!raw) {
+    // Defaults: use your original hard-coded IDs so it works out of the box
+    var defaults = {
+      voiceFolderId: 'PASTE_ID_HERE',   // main voice projects folder
+      auditionFolderId: 'PASTE_ID_HERE' // auditions folder
+    };
+    props.setProperty(SETTINGS_KEY, JSON.stringify(defaults));
+    return defaults;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    var fallback = {
+      voiceFolderId: 'PASTE_ID_HERE',
+      auditionFolderId: 'PASTE_ID_HERE'
+    };
+    props.setProperty(SETTINGS_KEY, JSON.stringify(fallback));
+    return fallback;
+  }
+}
+
+/**
+ * Saves settings from the UI.
+ * Expects an object: { voiceFolderId: '...', auditionFolderId: '...' }
+ */
+function saveTrackerSettings(settings) {
+  settings = settings || {};
+  var clean = {
+    voiceFolderId: String(settings.voiceFolderId || '').trim(),
+    auditionFolderId: String(settings.auditionFolderId || '').trim()
+  };
+
+  var props = PropertiesService.getDocumentProperties();
+  props.setProperty(SETTINGS_KEY, JSON.stringify(clean));
+  return true;
+}
+
+/** Convenience helpers used in the rest of the code */
+function getVoiceFolderId() {
+  var cfg = getTrackerSettings();
+  return cfg.voiceFolderId || '';
+}
+
+function getAuditionFolderId() {
+  var cfg = getTrackerSettings();
+  return cfg.auditionFolderId || '';
+}
 
 // ====== Utilities ======
 function arraysEqual_(a, b) {
@@ -134,7 +195,11 @@ function collectFiles(folder, path, filesData, allCharacters) {
 // Voice Projects (OG)
 // =====================
 function updateVoiceProjects() {
-  var folderId = VOICE_FOLDER_ID;
+  var folderId = getVoiceFolderId();
+  if (!folderId) {
+    throw new Error("Voice Folder ID is not configured. Open the Settings tab in the Tracker Panel and set it.");
+  }
+
   var sheet = getVoiceSheet() || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
   // === Preserve G/H keyed by Character|FileName (from existing sheet)
@@ -184,8 +249,8 @@ function updateVoiceProjects() {
     .setBackground("#81C784").setFontColor("#000000")
     .setHorizontalAlignment("center").setVerticalAlignment("middle");
 
-  var VOICE_HEADERS = ["Folder", "File Name", "Character", "Date Added", "Mime Type", "File Link", "Final Link", "Status"];
-  sheet.getRange(2, 1, 1, VOICE_HEADERS.length).setValues([VOICE_HEADERS])
+  var VOICE_HEADERS_LOCAL = ["Folder", "File Name", "Character", "Date Added", "Mime Type", "File Link", "Final Link", "Status"];
+  sheet.getRange(2, 1, 1, VOICE_HEADERS_LOCAL.length).setValues([VOICE_HEADERS_LOCAL])
     .setFontWeight("bold").setFontFamily("Roboto").setFontSize(10)
     .setBackground("#C8E6C9").setFontColor("#000000")
     .setHorizontalAlignment("center")
@@ -357,7 +422,11 @@ function getStatsAndRecent(limit) {
 // =====================
 function updateAuditions() {
   var sheet = getAuditionSheet();
-  var folder = DriveApp.getFolderById(AUDITION_FOLDER_ID);
+  var folderId = getAuditionFolderId();
+  if (!folderId) {
+    throw new Error("Audition Folder ID is not configured. Open the Settings tab in the Tracker Panel and set it.");
+  }
+  var folder = DriveApp.getFolderById(folderId);
 
   // Preserve existing Status keyed by Character|FileName
   var preserve = {};
@@ -392,8 +461,8 @@ function updateAuditions() {
     .setFontSize(10).setFontColor("#E8F5E9").setHorizontalAlignment("center");
 
   // Headers
-  var AUDITION_HEADERS = ["Folder", "File Name", "Character", "Date Added", "Mime Type", "File Link", "Status"];
-  sheet.getRange(3, 1, 1, AUDITION_HEADERS.length).setValues([AUDITION_HEADERS])
+  var AUDITION_HEADERS_LOCAL = ["Folder", "File Name", "Character", "Date Added", "Mime Type", "File Link", "Status"];
+  sheet.getRange(3, 1, 1, AUDITION_HEADERS_LOCAL.length).setValues([AUDITION_HEADERS_LOCAL])
     .setFontFamily("Roboto").setFontSize(10).setFontWeight("bold")
     .setBackground("#A5D6A7").setFontColor("#1B5E20")
     .setHorizontalAlignment("center")
@@ -803,7 +872,11 @@ function exportVisibleToCSV_(sheet, filename, dataStartRow) {
   }).join('\r\n');
 
   var blob = Utilities.newBlob(csv, 'text/csv', filename);
-  DriveApp.getFolderById(VOICE_FOLDER_ID).createFile(blob);
+  var folderId = getVoiceFolderId();
+  if (!folderId) {
+    throw new Error("Voice Folder ID is not configured. Open the Settings tab in the Tracker Panel and set it.");
+  }
+  DriveApp.getFolderById(folderId).createFile(blob);
   return filename;
 }
 
@@ -843,11 +916,15 @@ function showPopup() {
 }
 
 // =======================
-// PDF Export (unchanged)
+// PDF Export
 // =======================
 function exportSummaryPDF() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var folder = DriveApp.getFolderById(VOICE_FOLDER_ID);
+  var folderId = getVoiceFolderId();
+  if (!folderId) {
+    throw new Error("Voice Folder ID is not configured. Open the Settings tab in the Tracker Panel and set it.");
+  }
+  var folder = DriveApp.getFolderById(folderId);
   var pdfName = "VoiceProjectSummary_" + new Date().toISOString().slice(0,10) + ".pdf";
   var blob = ss.getAs('application/pdf').setName(pdfName);
   folder.createFile(blob);
