@@ -20,42 +20,73 @@ var SETTINGS_KEY = 'VOICE_TRACKER_SETTINGS';
  * Returns current settings object:
  * {
  *   voiceFolderId: string,
- *   auditionFolderId: string
+ *   auditionFolderId: string,
+ *   performerName: string
  * }
  */
 function getTrackerSettings() {
   var props = PropertiesService.getDocumentProperties();
   var raw = props.getProperty(SETTINGS_KEY);
+
+  // Base defaults (your original IDs + default performer)
+  var defaults = {
+    voiceFolderId: '',   // main voice projects folder
+    auditionFolderId: '', // auditions folder
+    performerName: ''
+  };
+
   if (!raw) {
-    // Defaults: use your original hard-coded IDs so it works out of the box
-    var defaults = {
-      voiceFolderId: 'PASTE_ID_HERE',   // main voice projects folder
-      auditionFolderId: 'PASTE_ID_HERE' // auditions folder
-    };
     props.setProperty(SETTINGS_KEY, JSON.stringify(defaults));
     return defaults;
   }
+
+  var cfg;
   try {
-    return JSON.parse(raw);
+    cfg = JSON.parse(raw) || {};
   } catch (e) {
-    var fallback = {
-      voiceFolderId: 'PASTE_ID_HERE',
-      auditionFolderId: 'PASTE_ID_HERE'
-    };
-    props.setProperty(SETTINGS_KEY, JSON.stringify(fallback));
-    return fallback;
+    // If parsing fails, reset to defaults
+    props.setProperty(SETTINGS_KEY, JSON.stringify(defaults));
+    return defaults;
   }
+
+  // Backward-compat: make sure all fields exist
+  if (!cfg.voiceFolderId) cfg.voiceFolderId = defaults.voiceFolderId;
+  if (!cfg.auditionFolderId) cfg.auditionFolderId = defaults.auditionFolderId;
+  if (!cfg.performerName) cfg.performerName = defaults.performerName;
+
+  // Normalize stored value
+  props.setProperty(SETTINGS_KEY, JSON.stringify(cfg));
+  return cfg;
 }
 
 /**
  * Saves settings from the UI.
- * Expects an object: { voiceFolderId: '...', auditionFolderId: '...' }
+ *
+ * Supports BOTH call shapes:
+ *   saveTrackerSettings({ voiceFolderId, auditionFolderId, performerName })
+ *   saveTrackerSettings(voiceFolderId, auditionFolderId, performerName)
  */
 function saveTrackerSettings(settings) {
-  settings = settings || {};
+  var current = getTrackerSettings();
+
+  var voiceFolderId, auditionFolderId, performerName;
+
+  // Object-style: saveTrackerSettings({ ... })
+  if (settings && typeof settings === 'object' && !Array.isArray(settings)) {
+    voiceFolderId    = settings.voiceFolderId;
+    auditionFolderId = settings.auditionFolderId;
+    performerName    = settings.performerName;
+  } else {
+    // Positional-style: saveTrackerSettings(voiceId, auditionId, performer)
+    voiceFolderId    = settings;
+    auditionFolderId = arguments.length > 1 ? arguments[1] : '';
+    performerName    = arguments.length > 2 ? arguments[2] : '';
+  }
+
   var clean = {
-    voiceFolderId: String(settings.voiceFolderId || '').trim(),
-    auditionFolderId: String(settings.auditionFolderId || '').trim()
+    voiceFolderId: String(voiceFolderId || current.voiceFolderId || '').trim(),
+    auditionFolderId: String(auditionFolderId || current.auditionFolderId || '').trim(),
+    performerName: String(performerName || current.performerName || 'Fred French').trim()
   };
 
   var props = PropertiesService.getDocumentProperties();
@@ -72,6 +103,16 @@ function getVoiceFolderId() {
 function getAuditionFolderId() {
   var cfg = getTrackerSettings();
   return cfg.auditionFolderId || '';
+}
+
+function getPerformerName_() {
+  var cfg = getTrackerSettings();
+  return cfg.performerName || 'Fred French';
+}
+
+// Escape user-entered name so it’s safe to inject into a RegExp
+function escapeRegex_(s) {
+  return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // ====== Utilities ======
@@ -162,16 +203,35 @@ function getUrlFromCell(range) {
   return '';
 }
 
-// 🔎 Collect files recursively
+// 🔎 Collect files recursively (uses Settings → Performer Name)
 function collectFiles(folder, path, filesData, allCharacters) {
   var folderName = folder.getName();
   var currentPath = path ? path + "/" + folderName : folderName;
+
+  // Performer name from Settings (fallback to "Fred French")
+  var performerName = getPerformerName_();
+  var pattern = null;
+  if (performerName) {
+    var escapedName = escapeRegex_(performerName);
+    // Matches: "<Performer> - <Character> - ..."
+    pattern = new RegExp('^' + escapedName + '\\s*-\\s*(.+?)\\s*-');
+  }
 
   var files = folder.getFiles();
   while (files.hasNext()) {
     var file = files.next();
     var fileName = file.getName();
-    var match = fileName.match(/Fred French - (.+?) -/);
+
+    var match = null;
+    // Try Settings-based pattern first
+    if (pattern) {
+      match = fileName.match(pattern);
+    }
+    // Fallback: generic "<Anything> - <Character> - ..." pattern
+    if (!match) {
+      match = fileName.match(/^[^-]+-\s*(.+?)\s*-/);
+    }
+
     var characterName = match ? match[1].trim() : "Unknown";
     allCharacters.add(characterName);
 
