@@ -654,16 +654,24 @@
         <div style="flex:1 1 260px; min-width:260px;">
           <h2 style="margin-bottom:6px;">Settings</h2>
           <div class="subtitle">
-            Configure the core folders used by the Voice Project Tracker.  
-            Paste just the <strong>folder ID</strong> (the long string from your Drive URL).
+            Configure the core folders and your performer name.  
+            Paste just the <strong>folder ID</strong> (the long string from your Drive URL), and enter the name used at the start of your files, like <em>“Your Name - Character - …”</em>.
           </div>
 
           <div style="margin-top:12px;">
             <label for="settingsVoiceFolderId">Voice Folder ID</label>
-            <input id="settingsVoiceFolderId" placeholder="e.g. 1lq_rbzqRj_keQ3XXwtWUYG7z6hNGTxK7">
+            <input id="settingsVoiceFolderId" placeholder="Paste Cast Folder ID Here">
 
             <label for="settingsAuditionFolderId">Audition Folder ID</label>
-            <input id="settingsAuditionFolderId" placeholder="e.g. 1YtKGcqfCC3zR5XriayoMw-SpvmA2Exmk">
+            <input id="settingsAuditionFolderId" placeholder="Paste Audition Folder ID Here">
+
+            <!-- NEW: Performer / Stage Name field -->
+            <label for="settingsPerformerName">Performer / Stage Name</label>
+            <input id="settingsPerformerName" placeholder="e.g. John Doe">
+            <div class="subtitle" style="margin-top:2px;">
+              Used to detect <code>Your Name - Character - ...</code> in file names.  
+              If left blank, the tracker falls back to a generic pattern.
+            </div>
           </div>
 
           <div style="margin-top:8px;">
@@ -828,15 +836,19 @@
 
     // ===== Settings load/save =====
     function loadSettings(){
-      const voiceInput = document.getElementById('settingsVoiceFolderId');
-      const audInput   = document.getElementById('settingsAuditionFolderId');
+      const voiceInput     = document.getElementById('settingsVoiceFolderId');
+      const audInput       = document.getElementById('settingsAuditionFolderId');
+      const performerInput = document.getElementById('settingsPerformerName');
       if (!voiceInput || !audInput) return;
 
       google.script.run
         .withSuccessHandler(function(cfg){
           cfg = cfg || {};
-          voiceInput.value = cfg.voiceFolderId || '';
-          audInput.value   = cfg.auditionFolderId || '';
+          voiceInput.value     = cfg.voiceFolderId    || '';
+          audInput.value       = cfg.auditionFolderId || '';
+          if (performerInput) {
+            performerInput.value = cfg.performerName || '';
+          }
         })
         .withFailureHandler(function(err){
           showNotification(err && err.message ? err.message : 'Failed to load settings', 'error');
@@ -845,13 +857,15 @@
     }
 
     function saveSettings(){
-      const voiceInput = document.getElementById('settingsVoiceFolderId');
-      const audInput   = document.getElementById('settingsAuditionFolderId');
+      const voiceInput     = document.getElementById('settingsVoiceFolderId');
+      const audInput       = document.getElementById('settingsAuditionFolderId');
+      const performerInput = document.getElementById('settingsPerformerName');
       if (!voiceInput || !audInput) return;
 
       const payload = {
-        voiceFolderId: (voiceInput.value || '').trim(),
-        auditionFolderId: (audInput.value || '').trim()
+        voiceFolderId:    (voiceInput.value || '').trim(),
+        auditionFolderId: (audInput.value || '').trim(),
+        performerName:    (performerInput && performerInput.value ? performerInput.value.trim() : '')
       };
 
       google.script.run
