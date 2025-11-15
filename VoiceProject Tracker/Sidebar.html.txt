@@ -7,105 +7,432 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
-    :root {
-      --primary: #2E7D32;
-      --primary-light: #66BB6A;
-      --primary-dark: #1B5E20;
-      --bg: linear-gradient(135deg,#E8F5E9,#F1F5F2);
-      --surface: rgba(255,255,255,0.9);
-      --border: rgba(200,230,201,0.6);
-      --shadow: rgba(17,24,39,0.1);
-      --muted: #6b6b6b;
-      --hover: rgba(102,187,106,0.08);
-      --accent: #A5D6A7;
-      --donate: #d32f2f;
-      --donate-hover: #ef5350;
+  :root {
+    --primary: #2E7D32;
+    --primary-light: #66BB6A;
+    --primary-dark: #1B5E20;
+    --bg: radial-gradient(circle at top, #e8f5e9 0, #f1f5f2 40%, #e3f2fd 100%);
+    --surface: rgba(255,255,255,0.9);
+    --border: rgba(200,230,201,0.7);
+    --shadow: rgba(17,24,39,0.12);
+    --muted: #6b6b6b;
+    --hover: rgba(102,187,106,0.08);
+    --accent: #A5D6A7;
+    --donate: #d32f2f;
+    --donate-hover: #ef5350;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--bg);
+    color: #222;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* App shell to keep content nicely centered */
+  main {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 1120px;
+    width: 100%;
+    margin: 12px auto 28px;
+  }
+
+  /* TOP TABS (no horizontal scroll) */
+  .tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.92);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 18px var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    overflow: hidden;
+    user-select: none;
+    backdrop-filter: blur(14px);
+  }
+
+  .tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-dark);
+    border: 1px solid transparent;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease, transform .12s ease;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .tab:hover {
+    background: var(--hover);
+  }
+
+  .tab.active {
+    background: var(--primary-light);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+
+  .tab.active::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: -5px;
+    height: 3px;
+    border-radius: 999px;
+    background: rgba(38, 166, 91, 0.9);
+  }
+
+  .tab .material-icons {
+    font-size: 18px;
+    flex: 0 0 auto;
+  }
+
+  .tab .label {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* "More" tab */
+  .tab.more {
+    margin-left: auto;
+    position: relative;
+    display: none;
+  }
+
+  /* MAIN CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 30px var(--shadow);
+    backdrop-filter: blur(16px);
+  }
+
+  .title-with-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .version-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(27,94,32,0.18);
+    background: rgba(232,245,233,0.95);
+    color: var(--primary-dark);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    white-space: nowrap;
+  }
+
+  /* More panel in main content */
+  .more-panel {
+    display: none;
+  }
+
+  .more-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .more-panel-header h2 {
+    margin: 0;
+  }
+
+  .more-panel-description {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+
+  .more-panel-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    letter-spacing: 0.01em;
+  }
+
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 13px;
+    margin-bottom: 10px;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    font-family: inherit;
+    resize: vertical;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 2px rgba(102,187,106,0.35);
+    background: #fcfffc;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  .row > * {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  /* BUTTONS */
+  .btn {
+    background: var(--primary);
+    color: #fff;
+    padding: 9px 13px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    transition: background .18s ease, transform .1s ease, box-shadow .18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    text-decoration: none;
+  }
+
+  .btn .material-icons {
+    font-size: 18px;
+  }
+
+  .btn:hover {
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(0,0,0,0.22);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+  }
+
+  .btn.secondary {
+    background: #fff;
+    color: var(--primary);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  }
+
+  .btn.secondary:hover {
+    background: rgba(245,250,245,0.95);
+  }
+
+  .btn.donate {
+    background: var(--donate);
+  }
+
+  .btn.donate:hover {
+    background: var(--donate-hover);
+  }
+
+  /* Focus states for clickable elements */
+  .btn:focus-visible,
+  .tab:focus-visible,
+  .chip:focus-visible {
+    outline: 2px solid #1b5e20;
+    outline-offset: 2px;
+  }
+
+  /* NOTIFICATION TOAST */
+  #notification {
+    position: fixed;
+    right: 20px;
+    bottom: 16px;
+    min-width: 260px;
+    max-width: 360px;
+    display: none;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.2);
+    font-size: 13px;
+    z-index: 50;
+  }
+
+  #notification.success {
+    background: #E8F5E9;
+    color: var(--primary-dark);
+    border: 1px solid #C8E6C9;
+  }
+
+  #notification.error {
+    background: #FFEBEE;
+    color: #C62828;
+    border: 1px solid #FFCDD2;
+  }
+
+  /* Audition quick chips */
+  .chipbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    background: #fff;
+    color: var(--primary-dark);
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
+    user-select: none;
+    flex: 0 0 auto;
+    font-size: 12px;
+  }
+
+  .chip:hover {
+    background: var(--hover);
+  }
+
+  .chip.active {
+    background: var(--primary-light);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  }
+
+  @media (max-width: 420px) {
+    .tab .label {
+      display: none;
     }
+  }
 
-    * { box-sizing: border-box; margin:0; padding:0; }
-    body { font-family:'Roboto',sans-serif; background:var(--bg); color:#222; min-height:100vh; display:flex; flex-direction:column; }
+  /* METRICS / KPIs */
+  .metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 
-    /* TOP TABS (no horizontal scroll) */
-    .tabs {
-      display:flex; align-items:center; gap:6px; padding:8px;
-      background:var(--surface); border-bottom:1px solid var(--border);
-      box-shadow:0 2px 16px var(--shadow); position:sticky; top:0; z-index:10;
-      overflow:hidden; user-select:none;
-    }
-    .tab {
-      display:flex; align-items:center; gap:6px; padding:8px 10px;
-      border-radius:12px; cursor:pointer; font-weight:600; color:var(--primary-dark);
-      border:1px solid transparent; transition:.2s; white-space:nowrap; max-width:100%;
-    }
-    .tab:hover { background:var(--hover); }
-    .tab.active { background:var(--primary-light); color:#fff; }
-    .tab .material-icons { font-size:18px; flex:0 0 auto; }
-    .tab .label { font-size:13px; overflow:hidden; text-overflow:ellipsis; }
+  .kpi {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    flex: 1 1 160px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
 
-    /* "More" tab */
-    .tab.more { margin-left:auto; position:relative; display:none; }
-    .more-menu {
-      position:absolute; right:0; top:36px; background:#fff; border:1px solid var(--border);
-      border-radius:12px; box-shadow:0 8px 28px var(--shadow); display:none; min-width:180px; overflow:hidden;
-    }
-    .more-menu .menu-item {
-      display:flex; align-items:center; gap:8px; padding:8px 12px; cursor:pointer; font-weight:500; color:var(--primary-dark);
-      border-bottom:1px solid rgba(0,0,0,0.04);
-    }
-    .more-menu .menu-item:last-child { border-bottom:none; }
-    .more-menu .menu-item:hover { background:var(--hover); }
+  .kpi .label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 
-    /* MAIN */
-    main { padding:12px; display:flex; flex-direction:column; gap:12px; }
-    .card {
-      background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 8px 28px var(--shadow);
-    }
+  .kpi .value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    line-height: 1.2;
+    margin-top: 4px;
+  }
 
-    h1 { font-size:18px; font-weight:700; color:var(--primary-dark); }
-    label { display:block; font-weight:600; color:var(--primary-dark); margin-bottom:6px; font-size:12px; }
-    input, select {
-      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
-      background:#fff; font-size:13px; margin-bottom:10px;
-    }
+  .kpi .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
 
-    .row { display:flex; flex-wrap:wrap; gap:10px; }
-    .row > * { flex:1; min-width:200px; }
+  /* TABLES (Insights Recent Activity) */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
 
-    .btn {
-      background:var(--primary); color:#fff; padding:9px 12px; border-radius:12px; border:none; font-weight:600;
-      cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(0,0,0,0.12);
-      display:inline-flex; align-items:center; gap:6px;
-    }
-    .btn .material-icons { font-size:18px; }
-    .btn:hover { background:var(--primary-light); transform:translateY(-1px); }
-    .btn.secondary { background:#fff; color:var(--primary); border:1px solid var(--border); }
-    .btn.secondary:hover { background:rgba(245,250,245,0.8); }
-    .btn.donate { background:var(--donate); }
-    .btn.donate:hover { background:var(--donate-hover); }
+  .table thead {
+    background: rgba(232,245,233,0.9);
+  }
 
-    #notification { display:none; padding:10px 12px; border-radius:12px; font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,0.12); }
-    #notification.success { background:#E8F5E9; color:var(--primary-dark); border:1px solid #C8E6C9; }
-    #notification.error   { background:#FFEBEE; color:#C62828; border:1px solid #FFCDD2; }
+  .table th,
+  .table td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
 
-    /* Audition quick chips */
-    .chipbar { display:flex; flex-wrap:wrap; gap:8px; }
-    .chip {
-      background:#fff; color:var(--primary-dark); border:1px solid var(--border);
-      padding:8px 12px; border-radius:999px; font-weight:600; cursor:pointer; transition:.2s; user-select:none; flex:0 0 auto;
-    }
-    .chip:hover { background:var(--hover); }
-    .chip.active { background:var(--primary-light); color:#fff; border-color:transparent; }
+  .table tbody tr:nth-child(odd) {
+    background: rgba(250,252,250,0.9);
+  }
 
-    @media (max-width: 420px) { .tab .label { display:none; } }
+  .table tbody tr:hover {
+    background: rgba(230,244,234,0.7);
+  }
 
-    .metrics { display:flex; flex-wrap:wrap; gap:10px; }
-    .kpi {
-      background:#fff; border:1px solid var(--border); border-radius:12px;
-      padding:12px; flex:1 1 160px; box-shadow:0 4px 12px rgba(0,0,0,0.06);
-    }
-    .kpi .label { font-size:12px; color:var(--muted); font-weight:600; }
-    .kpi .value { font-size:22px; font-weight:800; color:var(--primary-dark); line-height:1.2; margin-top:4px; }
-    .kpi .sub   { font-size:11px; color:var(--muted); margin-top:4px; }
+  .subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 4px;
+   }
   </style>
 </head>
 <body>
@@ -127,6 +454,12 @@
     <div class="tab" data-section="auditions" role="tab" title="Auditions">
       <span class="material-icons">headset</span><span class="label">Auditions</span>
     </div>
+
+    <!-- NEW: Settings tab -->
+    <div class="tab" data-section="settings" role="tab" title="Settings">
+      <span class="material-icons">settings</span><span class="label">Settings</span>
+    </div>
+
     <div class="tab" data-section="actions" role="tab" title="Actions">
       <span class="material-icons">download</span><span class="label">Actions</span>
     </div>
@@ -134,18 +467,32 @@
     <!-- More (auto appears if needed) -->
     <div class="tab more" id="moreTab" title="More">
       <span class="material-icons">more_horiz</span><span class="label">More</span>
-      <div class="more-menu" id="moreMenu"></div>
     </div>
   </div>
 
   <main>
+    <!-- More panel in main content -->
+    <div id="morePanel" class="card more-panel">
+      <div class="more-panel-header">
+        <span class="material-icons">view_comfy</span>
+        <h2>More Features</h2>
+      </div>
+      <div class="more-panel-description">
+        These sections are hidden from the top bar on smaller screens. Pick one to jump straight there.
+      </div>
+      <div id="morePanelBody" class="more-panel-buttons"></div>
+    </div>
+
     <!-- Title row -->
     <div class="card">
       <div class="row" style="align-items:center;">
-        <h1>🎙️ Voice Project Tracker</h1>
+        <h1 class="title-with-badge">
+         🎙️ Voice Project Tracker
+         <span class="version-badge">v1.0</span>
+        </h1>
         <div style="flex:1"></div>
 
-        <!-- Donate button (restored) -->
+        <!-- Donate button -->
         <a class="btn donate"
            href="https://gofund.me/64825f604"
            target="_blank"
@@ -301,6 +648,41 @@
       </div>
     </section>
 
+    <!-- NEW: Settings section -->
+    <section id="settings" class="card" style="display:none;">
+      <div class="row" style="align-items:flex-start;">
+        <div style="flex:1 1 260px; min-width:260px;">
+          <h2 style="margin-bottom:6px;">Settings</h2>
+          <div class="subtitle">
+            Configure the core folders used by the Voice Project Tracker.  
+            Paste just the <strong>folder ID</strong> (the long string from your Drive URL).
+          </div>
+
+          <div style="margin-top:12px;">
+            <label for="settingsVoiceFolderId">Voice Folder ID</label>
+            <input id="settingsVoiceFolderId" placeholder="e.g. 1lq_rbzqRj_keQ3XXwtWUYG7z6hNGTxK7">
+
+            <label for="settingsAuditionFolderId">Audition Folder ID</label>
+            <input id="settingsAuditionFolderId" placeholder="e.g. 1YtKGcqfCC3zR5XriayoMw-SpvmA2Exmk">
+          </div>
+
+          <div style="margin-top:8px;">
+            <button class="btn" type="button" onclick="saveSettings()">
+              <span class="material-icons">save</span> Save Settings
+            </button>
+            <button class="btn secondary" type="button" onclick="loadSettings()">
+              <span class="material-icons">refresh</span> Reload
+            </button>
+          </div>
+        </div>
+
+        <div style="flex:1 1 260px; min-width:260px;">
+          <label for="settingsNotes">Notes / Future Settings</label>
+          <textarea id="settingsNotes" rows="5" placeholder="Optional notes about your setup, alternate folders, or future ideas. (Not used by the script yet.)"></textarea>
+        </div>
+      </div>
+    </section>
+
     <section id="actions" class="card" style="display:none;">
       <div class="row">
         <button class="btn" type="button" onclick="refreshSheet()">Refresh Voice Sheet</button>
@@ -339,42 +721,74 @@
     const tabstrip = document.getElementById('tabstrip');
     const allTabs = Array.from(tabstrip.querySelectorAll('.tab:not(.more)'));
     const moreTab = document.getElementById('moreTab');
-    const moreMenu = document.getElementById('moreMenu');
+    const morePanel = document.getElementById('morePanel');
+    const morePanelBody = document.getElementById('morePanelBody');
 
     function activateSection(id){
-      document.querySelectorAll('main section').forEach(s => s.style.display = (s.id === id ? 'block' : 'none'));
-      allTabs.forEach(t => t.classList.toggle('active', t.dataset.section === id));
-      allTabs.forEach(t => t.setAttribute('aria-selected', t.dataset.section === id ? 'true' : 'false'));
-      moreMenu.style.display = 'none';
+      document.querySelectorAll('main section').forEach(s => {
+        s.style.display = (s.id === id ? 'block' : 'none');
+      });
+      allTabs.forEach(t => {
+        t.classList.toggle('active', t.dataset.section === id);
+        t.setAttribute('aria-selected', t.dataset.section === id ? 'true' : 'false');
+      });
+      if (morePanel) morePanel.style.display = 'none';
+
       if (id === 'insights') loadInsights();
+      if (id === 'settings') loadSettings();
     }
+
     allTabs.forEach(t => t.addEventListener('click', () => activateSection(t.dataset.section)));
 
     function layoutTabs(){
+      // Reset
       allTabs.forEach(t => t.style.display = 'flex');
-      moreMenu.innerHTML = '';
+      if (morePanelBody) morePanelBody.innerHTML = '';
+      if (morePanel) morePanel.style.display = 'none';
       moreTab.style.display = 'none';
 
       const available = tabstrip.clientWidth - 10; // buffer
       let used = 0;
+      const hiddenTabs = [];
+
       for (const t of allTabs) {
         used += t.offsetWidth + 6;
         if (used > available) {
-          const item = document.createElement('div');
-          item.className = 'menu-item';
-          item.innerHTML = `<span class="material-icons">${t.querySelector('.material-icons').textContent}</span><span>${t.querySelector('.label')?.textContent || t.title}</span>`;
-          item.addEventListener('click', () => activateSection(t.dataset.section));
-          moreMenu.appendChild(item);
+          hiddenTabs.push(t);
           t.style.display = 'none';
           moreTab.style.display = 'flex';
         }
       }
+
+      if (hiddenTabs.length && morePanelBody) {
+        hiddenTabs.forEach(t => {
+          const label = t.querySelector('.label')?.textContent || t.title || t.dataset.section;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn secondary';
+          btn.textContent = label;
+          btn.addEventListener('click', () => {
+            activateSection(t.dataset.section);
+            if (morePanel) morePanel.style.display = 'none';
+          });
+          morePanelBody.appendChild(btn);
+        });
+      }
     }
+
     moreTab.addEventListener('click', (e) => {
       e.stopPropagation();
-      moreMenu.style.display = (moreMenu.style.display === 'block' ? 'none' : 'block');
+      if (!morePanel) return;
+      morePanel.style.display = (morePanel.style.display === 'none' || morePanel.style.display === '' ? 'block' : 'none');
     });
-    document.addEventListener('click', () => { moreMenu.style.display = 'none'; });
+
+    document.addEventListener('click', (e) => {
+      if (!morePanel) return;
+      if (!morePanel.contains(e.target) && !moreTab.contains(e.target)) {
+        morePanel.style.display = 'none';
+      }
+    });
+
     window.addEventListener('load', layoutTabs);
     window.addEventListener('resize', layoutTabs);
 
@@ -410,6 +824,44 @@
       const n=document.getElementById('notification');
       n.textContent=msg; n.className=type; n.style.display='block';
       setTimeout(()=>n.style.display='none',3000);
+    }
+
+    // ===== Settings load/save =====
+    function loadSettings(){
+      const voiceInput = document.getElementById('settingsVoiceFolderId');
+      const audInput   = document.getElementById('settingsAuditionFolderId');
+      if (!voiceInput || !audInput) return;
+
+      google.script.run
+        .withSuccessHandler(function(cfg){
+          cfg = cfg || {};
+          voiceInput.value = cfg.voiceFolderId || '';
+          audInput.value   = cfg.auditionFolderId || '';
+        })
+        .withFailureHandler(function(err){
+          showNotification(err && err.message ? err.message : 'Failed to load settings', 'error');
+        })
+        .getTrackerSettings?.();
+    }
+
+    function saveSettings(){
+      const voiceInput = document.getElementById('settingsVoiceFolderId');
+      const audInput   = document.getElementById('settingsAuditionFolderId');
+      if (!voiceInput || !audInput) return;
+
+      const payload = {
+        voiceFolderId: (voiceInput.value || '').trim(),
+        auditionFolderId: (audInput.value || '').trim()
+      };
+
+      google.script.run
+        .withSuccessHandler(function(){
+          showNotification('Settings saved.', 'success');
+        })
+        .withFailureHandler(function(err){
+          showNotification(err && err.message ? err.message : 'Failed to save settings', 'error');
+        })
+        .saveTrackerSettings?.(payload);
     }
 
     // ===== Updates / Bulk =====
@@ -469,7 +921,6 @@
           kpiWrap.appendChild(box);
         });
 
-        // Recent activity
         const body = document.getElementById('insightsRecentBody');
         body.innerHTML = '';
         (d?.recent || []).forEach(r => {
@@ -540,7 +991,7 @@
     function quickAudition(status, el){
       document.querySelectorAll('.chipbar .chip').forEach(c => c.classList.remove('active'));
       if (el) el.classList.add('active');
-      doAuditionSearch(); // use the search term too
+      doAuditionSearch();
     }
     document.addEventListener('keydown', function(e){
       if (e.key === 'Enter' && (e.target || {}).id === 'auditionSearch') {
