@@ -1,7 +1,3 @@
-Here’s the README updated so the concrete examples use **John Doe** as the performer/stage name.
-
----
-
 # VOICE PROJECT TRACKER — README
 
 A script-powered dashboard that scans your Google Drive voice-over folders, lists every file in a Google Sheet, lets you add “Final Production” links, track Current/Past status, and sync statuses with your separate Auditions tab. It also includes a polished HTML UI (buttons, tabs, KPIs, Settings) that you can open in the Sheet sidebar.
